@@ -9,6 +9,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super().__init__(parent)
         self.setupUi(self)
         self.comboBox.addItems(list1)
+        self.pushButton.clicked.connect(self.text)
+
+    def text(self):
+        print(self.comboBox.currentText())
 
 
 if __name__ == "__main__":
