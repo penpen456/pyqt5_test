@@ -18,7 +18,7 @@
     <property name="geometry">
      <rect>
       <x>140</x>
-      <y>110</y>
+      <y>70</y>
       <width>451</width>
       <height>151</height>
      </rect>
@@ -35,11 +35,11 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>210</x>
-      <y>380</y>
+      <y>260</y>
       <width>331</width>
       <height>92</height>
      </rect>
@@ -99,15 +99,6 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="2">
-      <widget class="QSpinBox" name="spinBox_minute">
-       <property name="font">
-        <font>
-         <pointsize>31</pointsize>
-        </font>
-       </property>
-      </widget>
-     </item>
      <item row="0" column="0">
       <widget class="QSpinBox" name="spinBox_hour">
        <property name="font">
@@ -141,7 +132,34 @@
        </property>
       </widget>
      </item>
+     <item row="0" column="2">
+      <widget class="QSpinBox" name="spinBox_minute">
+       <property name="font">
+        <font>
+         <pointsize>31</pointsize>
+        </font>
+       </property>
+      </widget>
+     </item>
     </layout>
+   </widget>
+   <widget class="QPushButton" name="pushButton_start">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>400</y>
+      <width>121</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>28</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>start</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
