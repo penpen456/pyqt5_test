@@ -1,6 +1,6 @@
 import sys
-import time
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
+from PyQt5.QtCore import QTimer
 from conunt_time import Ui_MainWindow
 from display import Ui_Form
 
@@ -40,6 +40,8 @@ class MyWindow(QMainWindow, Ui_MainWindow):
         display.label_second.setText(self.spinBox_second.text())
         self.close()
         display.show()
+        # 开始计时
+        display.timer.start(1000)
 
 
 # 创建倒计时显示窗口
@@ -47,10 +49,14 @@ class Display(QWidget, Ui_Form):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        # 创建一个计时器
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.countdown)
 
-    # 倒计时函数
+    # 倒计时显示函数
     def countdown(self):
-        pass
+        new_second = str(int(self.label_second.text()) - 1)
+        self.label_second.setText(new_second)
 
 
 if __name__ == "__main__":
