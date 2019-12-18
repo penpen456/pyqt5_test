@@ -1,3 +1,11 @@
+"""
+计时器核心内容：
+（1）设置窗口：利用self.spinBox.valueChanged来发送信号，实时同步显示与设置的值
+（2）display窗口：
+     （1）利用qtimer实现周期性执行递减函数（每隔1s执行一次）
+     （2）递减槽函数算法实现（主要用于显示）
+"""
+
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
 from PyQt5.QtCore import QTimer
@@ -54,9 +62,37 @@ class Display(QWidget, Ui_Form):
         self.timer.timeout.connect(self.countdown)
 
     # 倒计时显示函数
+    # 最关键的算法
     def countdown(self):
-        new_second = str(int(self.label_second.text()) - 1)
-        self.label_second.setText(new_second)
+        """
+        if 秒>0:
+            秒-1
+        else:
+            if 分>0:
+                分-1
+                秒变成59
+            else:
+                if 时>0:
+                    时-1
+                    分变59，秒变59
+                else:
+                    timer.stop()
+        """
+        int_second, int_minute, int_hour = \
+            int(self.label_second.text()), int(self.label_minute.text()), int(self.label_hour.text())
+        if int_second:
+            self.label_second.setText(str(int_second - 1))
+        else:
+            if int_minute:
+                self.label_minute.setText(str(int_minute - 1))
+                self.label_second.setText('59')
+            else:
+                if int_hour:
+                    self.label_hour.setText(str(int_hour - 1))
+                    self.label_minute.setText('59')
+                    self.label_second.setText('59')
+                else:
+                    self.timer.stop()
 
 
 if __name__ == "__main__":
