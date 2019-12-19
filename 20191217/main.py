@@ -1,9 +1,14 @@
 """
-计时器核心内容：
+1.计时器核心内容：
 （1）设置窗口：利用self.spinBox.valueChanged来发送信号，实时同步显示与设置的值
 （2）display窗口：
      （1）利用qtimer实现周期性执行递减函数（每隔1s执行一次）
      （2）递减槽函数算法实现（主要用于显示）
+2.调整优化：
+（1）设置界面时分秒都为0时，无法按start启动
+    （1）默认设置start按钮为false，因为默认时分秒都为0
+    （2）当3个spinBox的值发生改变时，调用检查判断
+（2）计时结束，返回设置界面
 """
 
 import sys
@@ -24,9 +29,11 @@ class MyWindow(QMainWindow, Ui_MainWindow):
         self.spinBox_minute.valueChanged.connect(self.repaint)
         self.spinBox_second.valueChanged.connect(self.repaint)
         # 开始按钮（点击发送信号连接开始槽）
+        # 默认start按钮为false
+        self.pushButton_start.setEnabled(False)
         self.pushButton_start.clicked.connect(self.start)
 
-    # 槽方法（刷新label_display）
+    # 槽方法（刷新label_display）,并且判断是否启用start按钮
     def repaint(self):
         """
         label_display由3部分组成
@@ -35,6 +42,11 @@ class MyWindow(QMainWindow, Ui_MainWindow):
         """
         time_str = self.spinBox_hour.text() + ':' + self.spinBox_minute.text() + ':' + self.spinBox_second.text()
         self.label_display.setText(time_str)
+        # 当时分秒都为0时，关闭start按钮
+        if int(self.spinBox_hour.text()) or int(self.spinBox_minute.text()) or int(self.spinBox_second.text()):
+            self.pushButton_start.setEnabled(True)
+        else:
+            self.pushButton_start.setEnabled(False)
 
     # 槽方法（开始倒计时）
     def start(self):
