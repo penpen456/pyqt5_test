@@ -8,7 +8,7 @@
 （1）设置界面时分秒都为0时，无法按start启动
     （1）默认设置start按钮为false，因为默认时分秒都为0
     （2）当3个spinBox的值发生改变时，调用检查判断
-（2）计时结束，返回设置界面
+（2）计时界面，设置一个返回按钮，返回设置界面
 """
 
 import sys
@@ -72,6 +72,8 @@ class Display(QWidget, Ui_Form):
         # 创建一个计时器
         self.timer = QTimer()
         self.timer.timeout.connect(self.countdown)
+        # 返回按钮连接槽函数
+        self.pushButton_back.clicked.connect(self.comeback)
 
     # 倒计时显示函数
     # 最关键的算法
@@ -105,6 +107,14 @@ class Display(QWidget, Ui_Form):
                     self.label_second.setText('59')
                 else:
                     self.timer.stop()
+
+    # 返回按钮槽函数
+    def comeback(self):
+        # 计时中途返回，需要先停止计时
+        if int(self.label_hour.text()) or int(self.label_minute.text()) or int(self.label_second.text()):
+            self.timer.stop()
+        self.close()
+        mywindow.show()
 
 
 if __name__ == "__main__":
