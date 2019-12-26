@@ -16,6 +16,7 @@ class MyWindow(QMainWindow, Ui_MainWindow):
         print(img)
 
     def opnefile(self):
+        # 可直接调用，说明不是成员方法
         allfile = QFileDialog.getOpenFileName(self, 'open file', 'D:\\', 'All Files (*)')
         print(allfile)
 
