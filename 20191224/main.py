@@ -3,12 +3,13 @@
  （1）菜单栏exit退出程序（信号与槽）
  （2）键盘事件：esc退出程序
  （3）字符出现次数统计
+ （4）实现菜单栏open打开文件对话框选择文件并显示在input里面
 2.优化：
   （1）只有input和keyword2个输入框都有文本时，才能点击查找按钮
 """
 
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
 from PyQt5.QtCore import Qt
 from findStrUI import Ui_MainWindow
 
@@ -27,10 +28,22 @@ class MyWindow(QMainWindow, Ui_MainWindow):
         self.textEdit_input.textChanged.connect(self.enable_find_button)
         self.plainTextEdit_keyword.textChanged.connect(self.enable_find_button)
 
+    # 菜单栏action槽函数
     def menu_action(self, action):
         # 点击exit按钮退出程序
         if action.text() == 'exit':
             self.close()
+        # 点击open打开文件对话框，选择文件
+        elif action.text() == 'open':
+            # 选择文件的路径
+            file_path = QFileDialog.getOpenFileName(self, 'open file', 'C:\\', 'All Files (*)')[0]
+            try:
+                with open(file_path) as f:
+                    self.textEdit_input.setText(f.read())
+            except UnicodeDecodeError:
+                # 碰到字节对象文件，用这种方式打开
+                with open(file_path, 'rb') as f:
+                    self.textEdit_input.setText(f.read().decode('utf-8'))
 
     def keyPressEvent(self, event):
         # 当按下esc键时退出程序
