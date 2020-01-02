@@ -4,11 +4,16 @@
  （2）键盘事件：esc退出程序-
  （3）字符出现次数统计-
  （4）实现菜单栏open打开文件对话框选择文件并显示在input里面-
+ （5）添加按钮清空textEdit_display-
+ （6）查找结果定位功能
 2.优化：
   （1）只有input和keyword2个输入框都有文本时，才能点击查找按钮-
   （2）用单独的线程去打开文件并读取,然后将结果通过信号发送给显示文本的槽函数，防止IO导致程序假死-
   （3）当文件行数过多时，无法显示在input框，添加下一页按钮
   （4）未选择文件时报错 FileNotFoundError: [Errno 2] No such file or directory: ''-
+  （5）将label_display改成textEdit,设置只读,方便复制-
+  （6）查找结果保留之前的结果（append）-
+  （7）enter键实现查找
 """
 
 import sys
@@ -52,6 +57,8 @@ class MyWindow(QMainWindow, Ui_MainWindow):
         self.readthread = Readthread()
         # io线程执行完成后发送信号连接绘制函数
         self.readthread.signal.connect(self.to_text_input)
+        # 添加清空textEdit_display的按钮
+        self.pushButton_clear.clicked.connect(self.clear_display)
 
     # 菜单栏action槽函数
     def menu_action(self, action):
@@ -61,7 +68,7 @@ class MyWindow(QMainWindow, Ui_MainWindow):
         # 点击open打开文件对话框，选择文件
         elif action.text() == 'open':
             file_path = QFileDialog.getOpenFileName(self, 'open file', 'C:\\', 'All Files (*)')[0]
-            # 只有选择了文件,才去启动读取线程
+            # 只有选择了文件,才去启动读取线程（文件未选择,file_path为空）
             if file_path:
                 # 给子线程添加一个属性,相当于向子线程中传递值
                 self.readthread.file_path = file_path
@@ -72,7 +79,7 @@ class MyWindow(QMainWindow, Ui_MainWindow):
         if event.key() == Qt.Key_Escape:
             self.close()
 
-    # 查找按钮的槽函数
+    # 查找按钮的槽函数(核心)
     def find(self):
         # 字符串
         string = self.textEdit_input.toPlainText()
@@ -80,8 +87,10 @@ class MyWindow(QMainWindow, Ui_MainWindow):
         keyword = self.plainTextEdit_keyword.toPlainText()
         # 出现的次数
         count = string.count(keyword)
-        # 输出到label_display
-        self.label_display.setText('"{0}"出现的次数为: {1}次'.format(keyword, count))
+        # 输出到textEdit_display(利用append不覆盖之前的结果)
+        self.textEdit_display.append('"{0}"出现的次数为: {1}次'.format(keyword, count))
+        self.textEdit_display.append('-'*60)
+        self.textEdit_display.append('-'*60)
 
     # 判断是否启用查找按钮的槽函数
     def enable_find_button(self):
@@ -93,6 +102,10 @@ class MyWindow(QMainWindow, Ui_MainWindow):
     # 写入文件文本到input输入框的槽函数
     def to_text_input(self, string):
         self.textEdit_input.setText(string)
+
+    # 清空textEdit_display的槽函数
+    def clear_display(self):
+        self.textEdit_display.setText('')
 
 
 if __name__ == "__main__":
