@@ -8,7 +8,7 @@
   （1）只有input和keyword2个输入框都有文本时，才能点击查找按钮-
   （2）用单独的线程去打开文件并读取,然后将结果通过信号发送给显示文本的槽函数，防止IO导致程序假死-
   （3）当文件行数过多时，无法显示在input框，添加下一页按钮
-  （4）未选择文件时报错 FileNotFoundError: [Errno 2] No such file or directory: ''  
+  （4）未选择文件时报错 FileNotFoundError: [Errno 2] No such file or directory: ''-
 """
 
 import sys
@@ -61,9 +61,11 @@ class MyWindow(QMainWindow, Ui_MainWindow):
         # 点击open打开文件对话框，选择文件
         elif action.text() == 'open':
             file_path = QFileDialog.getOpenFileName(self, 'open file', 'C:\\', 'All Files (*)')[0]
-            # 给子线程添加一个属性,相当于向子线程中传递值
-            self.readthread.file_path = file_path
-            self.readthread.start()
+            # 只有选择了文件,才去启动读取线程
+            if file_path:
+                # 给子线程添加一个属性,相当于向子线程中传递值
+                self.readthread.file_path = file_path
+                self.readthread.start()
 
     def keyPressEvent(self, event):
         # 当按下esc键时退出程序
