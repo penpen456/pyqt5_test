@@ -5,7 +5,7 @@
  （3）字符出现次数统计-
  （4）实现菜单栏open打开文件对话框选择文件并显示在input里面-
  （5）添加按钮清空textEdit_display-
- （6）查找结果定位功能
+ （6）查找结果定位功能-20200111
 2.优化：
   （1）只有input和keyword2个输入框都有文本时，才能点击查找按钮-
   （2）用单独的线程去打开文件并读取,然后将结果通过信号发送给显示文本的槽函数，防止IO导致程序假死-
@@ -14,12 +14,16 @@
   （5）将label_display改成textEdit,设置只读,方便复制-
   （6）查找结果保留之前的结果（append）-
   （7）enter键实现查找
+  （8）界面优化-20200111
+  （9）添加调整文件编码消息提示框
+  （10）优化统计和定位槽函数,只有在input和keyword改变时才执行find-20200111
 """
 
 import sys
 # import time
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtGui import QTextCursor
 from findStrUI import Ui_MainWindow
 
 
@@ -47,8 +51,8 @@ class MyWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         # 菜单栏动作连接
         self.menu.triggered.connect(self.menu_action)
-        # 点击查找按钮触发find方法
-        self.pushButton_find.clicked.connect(self.find)
+        # 点击统计按钮触发display_result方法
+        self.pushButton_find.clicked.connect(self.display_result)
         # 设置查找按钮初始为false，当input和keyword文本改变时判断是否启用按钮
         self.pushButton_find.setEnabled(False)
         self.textEdit_input.textChanged.connect(self.enable_find_button)
@@ -59,6 +63,14 @@ class MyWindow(QMainWindow, Ui_MainWindow):
         self.readthread.signal.connect(self.to_text_input)
         # 添加清空textEdit_display的按钮
         self.pushButton_clear.clicked.connect(self.clear_display)
+        # 下一个按钮连接槽函数(上一个按钮)
+        self.pushButton_next.setEnabled(False)
+        self.pushButton_next.clicked.connect(self.keyword_next)
+        self.pushButton_last.setEnabled(False)
+        self.pushButton_last.clicked.connect(self.keyword_last)
+        # 一些初始化变量
+        self.keyword = ''
+        self.string = ''
 
     # 菜单栏action槽函数
     def menu_action(self, action):
@@ -81,23 +93,71 @@ class MyWindow(QMainWindow, Ui_MainWindow):
 
     # 查找按钮的槽函数(核心)
     def find(self):
+        t = 0
+        self.pos_list = []
+        self.i = -1
         # 字符串
-        string = self.textEdit_input.toPlainText()
+        self.string = self.textEdit_input.toPlainText()
         # 要查找的关键词
-        keyword = self.plainTextEdit_keyword.toPlainText()
+        self.keyword = self.plainTextEdit_keyword.toPlainText()
         # 出现的次数
-        count = string.count(keyword)
+        self.count = self.string.count(self.keyword)
+        # 出现的位置
+        for i in range(self.count):
+            pos = self.string.find(self.keyword, t)
+            t = pos + 1
+            self.pos_list.append(pos)
+
+    # 统计槽函数
+    def display_result(self):
+        # 当文本和关键词发生改变时，才去执行查找代码，防止重复执行降低效率
+        if self.string != self.textEdit_input.toPlainText() or self.keyword != self.plainTextEdit_keyword.toPlainText():
+            self.find()
         # 输出到textEdit_display(利用append不覆盖之前的结果)
-        self.textEdit_display.append('"{0}"出现的次数为: {1}次'.format(keyword, count))
+        self.textEdit_display.append('"{0}"出现的次数为: {1}次'.format(self.keyword, self.count))
         self.textEdit_display.append('-'*60)
         self.textEdit_display.append('-'*60)
 
-    # 判断是否启用查找按钮的槽函数
+    # 下一个槽函数
+    def keyword_next(self):
+        if self.string != self.textEdit_input.toPlainText() or self.keyword != self.plainTextEdit_keyword.toPlainText():
+            self.find()
+        if self.i < len(self.pos_list)-1:
+            self.i += 1
+            cursor = self.textEdit_input.textCursor()
+            cursor.setPosition(self.pos_list[self.i])
+            cursor.movePosition(QTextCursor.Right, QTextCursor.KeepAnchor, len(self.keyword))
+            self.textEdit_input.setTextCursor(cursor)
+            self.textEdit_input.setFocus()
+        else:
+            self.textEdit_input.setFocus()
+            QMessageBox().information(self, 'error', '到顶了!', QMessageBox.Ok)
+
+    # 上一个槽函数
+    def keyword_last(self):
+        if self.string != self.textEdit_input.toPlainText() or self.keyword != self.plainTextEdit_keyword.toPlainText():
+            self.find()
+        if self.i > 0:
+            self.i -= 1
+            cursor = self.textEdit_input.textCursor()
+            cursor.setPosition(self.pos_list[self.i])
+            cursor.movePosition(QTextCursor.Right, QTextCursor.KeepAnchor, len(self.keyword))
+            self.textEdit_input.setTextCursor(cursor)
+            self.textEdit_input.setFocus()
+        else:
+            self.textEdit_input.setFocus()
+            QMessageBox().information(self, 'error', '到顶了!', QMessageBox.Ok)
+
+    # 判断是否启用统计按钮的槽函数
     def enable_find_button(self):
         if self.textEdit_input.toPlainText() and self.plainTextEdit_keyword.toPlainText():
             self.pushButton_find.setEnabled(True)
+            self.pushButton_next.setEnabled(True)
+            self.pushButton_last.setEnabled(True)
         else:
             self.pushButton_find.setEnabled(False)
+            self.pushButton_next.setEnabled(False)
+            self.pushButton_last.setEnabled(False)
 
     # 写入文件文本到input输入框的槽函数
     def to_text_input(self, string):
