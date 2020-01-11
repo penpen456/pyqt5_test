@@ -6,6 +6,7 @@
  （4）实现菜单栏open打开文件对话框选择文件并显示在input里面-
  （5）添加按钮清空textEdit_display-
  （6）查找结果定位功能-20200111
+ （7）保存统计结果按钮-20200111
 2.优化：
   （1）只有input和keyword2个输入框都有文本时，才能点击查找按钮-
   （2）用单独的线程去打开文件并读取,然后将结果通过信号发送给显示文本的槽函数，防止IO导致程序假死-
@@ -15,7 +16,7 @@
   （6）查找结果保留之前的结果（append）-
   （7）enter键实现查找
   （8）界面优化-20200111
-  （9）添加调整文件编码消息提示框
+  （9）添加调整文件编码消息提示框-20200111
   （10）优化统计和定位槽函数,只有在input和keyword改变时才执行find-20200111
 """
 
@@ -30,6 +31,7 @@ from findStrUI import Ui_MainWindow
 # 读取文件并通过信号将结果传输到GUI的线程
 class Readthread(QThread):
     signal = pyqtSignal(str)
+    signal2 = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -41,7 +43,7 @@ class Readthread(QThread):
                 # 将读取的字符串传递给主窗口
                 self.signal.emit(f.read())
         except UnicodeDecodeError:
-            print('调整文件编码为UTF-8')
+            self.signal2.emit()
 
 
 # 主窗口类
@@ -59,8 +61,9 @@ class MyWindow(QMainWindow, Ui_MainWindow):
         self.plainTextEdit_keyword.textChanged.connect(self.enable_find_button)
         # 创建一个读取文件子线程
         self.readthread = Readthread()
-        # io线程执行完成后发送信号连接绘制函数
+        # io线程执行完成后发送信号连接绘制函数或者错误提示函数
         self.readthread.signal.connect(self.to_text_input)
+        self.readthread.signal2.connect(self.error_message)
         # 添加清空textEdit_display的按钮
         self.pushButton_clear.clicked.connect(self.clear_display)
         # 下一个按钮连接槽函数(上一个按钮)
@@ -85,6 +88,12 @@ class MyWindow(QMainWindow, Ui_MainWindow):
                 # 给子线程添加一个属性,相当于向子线程中传递值
                 self.readthread.file_path = file_path
                 self.readthread.start()
+        # 保存textEdit_display结果
+        elif action.text() == 'save':
+            file_path = QFileDialog.getSaveFileName(self, 'save file', 'C:\\', '文本文档(*.txt)')[0]
+            if file_path:
+                with open(file_path, 'w') as f:
+                    f.write(self.textEdit_display.toPlainText())
 
     def keyPressEvent(self, event):
         # 当按下esc键时退出程序
@@ -166,6 +175,10 @@ class MyWindow(QMainWindow, Ui_MainWindow):
     # 清空textEdit_display的槽函数
     def clear_display(self):
         self.textEdit_display.setText('')
+
+    # 错误提示函数
+    def error_message(self):
+        QMessageBox.information(self, 'error', '修改文件编码为utf-8(建议保存为txt)', QMessageBox.Ok)
 
 
 if __name__ == "__main__":
